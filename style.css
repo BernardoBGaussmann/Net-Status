@@ -1,0 +1,103 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px;
+  color: #222;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+input {
+  flex: 1 1 160px;
+  padding: 8px;
+  font-size: 1rem;
+}
+
+button {
+  padding: 8px 12px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+#services {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.card h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.url {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: #666;
+  word-break: break-all;
+}
+
+.status {
+  font-weight: 600;
+}
+
+.status.online {
+  color: #1a7f37;
+}
+
+.status.offline {
+  color: #c62828;
+}
+
+.status.pending {
+  color: #888;
+  font-weight: 400;
+}
+
+.latency {
+  min-width: 64px;
+  color: #444;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.empty {
+  color: #888;
+}
