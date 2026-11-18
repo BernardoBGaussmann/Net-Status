@@ -26,3 +26,34 @@ export async function checkService(url, timeoutMs = 5000) {
         error
     };
 }
+
+export async function checkAllServices(servicesList) {
+    const results = await Promise.allSettled(
+        servicesList.map((service) => checkService(service.url))
+    );
+
+    const checkedAt = new Date().toISOString();
+
+    return servicesList.map((service, index) => {
+        const result = results[index];
+        const check = result.status === 'fulfilled'
+            ? result.value
+            : {
+                online: false,
+                status: null,
+                latency: null,
+                error: result.reason?.message ?? 'Unknown error'
+            };
+
+        return {
+            id: service.id,
+            name: service.name,
+            url: service.url,
+            online: check.online,
+            status: check.status,
+            latency: check.latency,
+            error: check.error,
+            checkedAt
+        };
+    });
+}
