@@ -1,14 +1,40 @@
 import { checkAllServices } from './monitor.js';
 
+const STORAGE_KEY = 'netpulse_services';
+const DEFAULT_SERVICES = [
+  { id: 1, name: 'GitHub API', url: 'https://api.github.com' },
+  { id: 2, name: 'JSONPlaceholder', url: 'https://jsonplaceholder.typicode.com/posts/1' }
+];
+
 const form = document.getElementById('service-form');
 const nameInput = document.getElementById('service-name');
 const urlInput = document.getElementById('service-url');
 const refreshButton = document.getElementById('refresh');
 const list = document.getElementById('services');
 
-const services = [];
+function loadServices() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      // Conteúdo inválido: recomeça com os serviços padrão.
+    }
+  }
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_SERVICES));
+  return [...DEFAULT_SERVICES];
+}
+
+function saveServices() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(services));
+}
+
+const services = loadServices();
 let results = new Map();
-let nextId = 1;
+let nextId = services.reduce((max, service) => Math.max(max, service.id), 0) + 1;
 let checking = false;
 let needsRefresh = false;
 
@@ -53,9 +79,25 @@ function render() {
     latency.className = 'latency';
     latency.textContent = result && result.latency != null ? `${result.latency} ms` : '—';
 
-    card.append(info, status, latency);
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'remove';
+    removeButton.textContent = 'Remover';
+    removeButton.addEventListener('click', () => removeService(service.id));
+
+    card.append(info, status, latency, removeButton);
     list.append(card);
   }
+}
+
+function removeService(id) {
+  const index = services.findIndex((service) => service.id === id);
+  if (index === -1) return;
+
+  services.splice(index, 1);
+  results.delete(id);
+  saveServices();
+  render();
 }
 
 async function refresh() {
@@ -99,6 +141,7 @@ form.addEventListener('submit', (event) => {
   urlInput.setCustomValidity('');
 
   services.push({ id: nextId++, name, url });
+  saveServices();
   form.reset();
   nameInput.focus();
   render();
@@ -114,3 +157,4 @@ urlInput.addEventListener('input', () => urlInput.setCustomValidity(''));
 refreshButton.addEventListener('click', refresh);
 
 render();
+refresh();
