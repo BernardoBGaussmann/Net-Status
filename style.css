@@ -22,6 +22,18 @@ h1 {
   margin: 0;
 }
 
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.auto-status {
+  font-size: 0.85rem;
+  color: #666;
+}
+
 form {
   display: flex;
   flex-wrap: wrap;
