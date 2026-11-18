@@ -5,14 +5,27 @@ export async function checkService(url, timeoutMs = 5000) {
     const start = performance.now();
     let status = null;
     let online = false;
+    let opaque = false;
     let error = null;
 
     try {
-        const response = await fetch(url, { signal: controller.signal });
-        status = response.status;
-        online = response.ok;
-    } catch (err) {
-        error = err.name === 'AbortError' ? 'Timeout' : err.message;
+        try {
+            const response = await fetch(url, { signal: controller.signal });
+            status = response.status;
+            online = response.ok;
+        } catch (err) {
+            if (err.name === 'AbortError') {
+                error = 'Timeout';
+            } else {
+                try {
+                    await fetch(url, { mode: 'no-cors', signal: controller.signal });
+                    online = true;
+                    opaque = true;
+                } catch (fallbackErr) {
+                    error = fallbackErr.name === 'AbortError' ? 'Timeout' : fallbackErr.message;
+                }
+            }
+        }
     } finally {
         clearTimeout(timeoutId);
     }
@@ -23,7 +36,8 @@ export async function checkService(url, timeoutMs = 5000) {
         online,
         status,
         latency: Math.round(end - start),
-        error
+        error,
+        opaque
     };
 }
 
@@ -42,7 +56,8 @@ export async function checkAllServices(servicesList) {
                 online: false,
                 status: null,
                 latency: null,
-                error: result.reason?.message ?? 'Unknown error'
+                error: result.reason?.message ?? 'Unknown error',
+                opaque: false
             };
 
         return {
@@ -53,6 +68,7 @@ export async function checkAllServices(servicesList) {
             status: check.status,
             latency: check.latency,
             error: check.error,
+            opaque: check.opaque,
             checkedAt
         };
     });
