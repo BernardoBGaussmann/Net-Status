@@ -78,7 +78,7 @@ function render() {
       status.textContent = '—';
     } else if (result.online) {
       status.className = 'status online';
-      status.textContent = 'Online';
+      status.textContent = result.opaque ? 'Online (sem CORS)' : 'Online';
     } else {
       status.className = 'status offline';
       status.textContent = 'Offline';
