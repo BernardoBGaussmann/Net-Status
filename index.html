@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetPulse</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>NetPulse</h1>
+    <button id="refresh" type="button">Atualizar Agora</button>
+  </header>
+
+  <form id="service-form">
+    <input id="service-name" type="text" placeholder="Nome" required>
+    <input id="service-url" type="url" placeholder="https://exemplo.com" required>
+    <button type="submit">Adicionar</button>
+  </form>
+
+  <section id="services"></section>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
