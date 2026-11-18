@@ -10,7 +10,12 @@ const form = document.getElementById('service-form');
 const nameInput = document.getElementById('service-name');
 const urlInput = document.getElementById('service-url');
 const refreshButton = document.getElementById('refresh');
+const autoButton = document.getElementById('toggle-auto');
+const autoStatus = document.getElementById('auto-status');
 const list = document.getElementById('services');
+
+const AUTO_REFRESH_MS = 30000;
+const AUTO_REFRESH_SECONDS = AUTO_REFRESH_MS / 1000;
 
 function loadServices() {
   const stored = localStorage.getItem(STORAGE_KEY);
@@ -37,6 +42,10 @@ let results = new Map();
 let nextId = services.reduce((max, service) => Math.max(max, service.id), 0) + 1;
 let checking = false;
 let needsRefresh = false;
+let autoEnabled = true;
+let autoTimer = null;
+let countdown = AUTO_REFRESH_SECONDS;
+let countdownTimer = null;
 
 function render() {
   list.replaceChildren();
@@ -101,11 +110,13 @@ function removeService(id) {
 }
 
 async function refresh() {
-  if (checking || services.length === 0) return;
+  if (checking) return;
 
   checking = true;
+  stopCountdown();
   refreshButton.disabled = true;
   refreshButton.textContent = 'Atualizando...';
+  renderAutoStatus();
 
   try {
     const checked = await checkAllServices([...services]);
@@ -119,9 +130,87 @@ async function refresh() {
     if (needsRefresh) {
       needsRefresh = false;
       refresh();
+    } else {
+      beginAutoCycle();
     }
   }
 }
+
+function renderAutoStatus() {
+  if (!autoEnabled) {
+    autoStatus.textContent = 'Auto-refresh pausado';
+  } else if (checking) {
+    autoStatus.textContent = 'Atualizando agora...';
+  } else {
+    autoStatus.textContent = `Próxima atualização em ${countdown}s`;
+  }
+}
+
+function stopCountdown() {
+  clearTimeout(countdownTimer);
+  countdownTimer = null;
+}
+
+function tickCountdown() {
+  countdownTimer = setTimeout(() => {
+    countdown = Math.max(0, countdown - 1);
+    renderAutoStatus();
+
+    if (countdown > 0) tickCountdown();
+  }, 1000);
+}
+
+function startCountdown() {
+  stopCountdown();
+
+  if (!autoEnabled) {
+    renderAutoStatus();
+    return;
+  }
+
+  countdown = AUTO_REFRESH_SECONDS;
+  renderAutoStatus();
+
+  if (checking) return;
+
+  tickCountdown();
+}
+
+function beginAutoCycle() {
+  if (!autoEnabled) {
+    stopCountdown();
+    renderAutoStatus();
+    return;
+  }
+
+  scheduleAutoRefresh();
+  startCountdown();
+}
+
+function scheduleAutoRefresh() {
+  if (!autoEnabled) return;
+
+  clearTimeout(autoTimer);
+  autoTimer = setTimeout(async () => {
+    autoTimer = null;
+    await refresh();
+  }, AUTO_REFRESH_MS);
+}
+
+autoButton.addEventListener('click', () => {
+  autoEnabled = !autoEnabled;
+
+  if (autoEnabled) {
+    autoButton.textContent = 'Pausar Auto';
+    beginAutoCycle();
+  } else {
+    autoButton.textContent = 'Retomar Auto';
+    clearTimeout(autoTimer);
+    autoTimer = null;
+    stopCountdown();
+    renderAutoStatus();
+  }
+});
 
 form.addEventListener('submit', (event) => {
   event.preventDefault();
