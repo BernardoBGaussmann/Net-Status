@@ -10,6 +10,7 @@ const services = [];
 let results = new Map();
 let nextId = 1;
 let checking = false;
+let needsRefresh = false;
 
 function render() {
   list.replaceChildren();
@@ -65,13 +66,18 @@ async function refresh() {
   refreshButton.textContent = 'Atualizando...';
 
   try {
-    const checked = await checkAllServices(services);
+    const checked = await checkAllServices([...services]);
     results = new Map(checked.map((item) => [item.id, item]));
     render();
   } finally {
     checking = false;
     refreshButton.disabled = false;
     refreshButton.textContent = 'Atualizar Agora';
+
+    if (needsRefresh) {
+      needsRefresh = false;
+      refresh();
+    }
   }
 }
 
@@ -96,7 +102,12 @@ form.addEventListener('submit', (event) => {
   form.reset();
   nameInput.focus();
   render();
-  refresh();
+
+  if (checking) {
+    needsRefresh = true;
+  } else {
+    refresh();
+  }
 });
 
 urlInput.addEventListener('input', () => urlInput.setCustomValidity(''));
