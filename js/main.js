@@ -219,11 +219,17 @@ form.addEventListener('submit', (event) => {
   const rawUrl = urlInput.value.trim();
   if (!name || !rawUrl) return;
 
+  const normalizedUrl = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(rawUrl)
+    ? rawUrl
+    : `https://${rawUrl}`;
+
   let url;
   try {
-    url = new URL(rawUrl).href;
+    const parsed = new URL(normalizedUrl);
+    if (!parsed.hostname.includes('.')) throw new Error('Hostname inválido');
+    url = parsed.href;
   } catch {
-    urlInput.setCustomValidity('Informe uma URL válida (ex: https://exemplo.com)');
+    urlInput.setCustomValidity('Informe uma URL válida (ex: exemplo.com ou https://exemplo.com)');
     urlInput.reportValidity();
     return;
   }
